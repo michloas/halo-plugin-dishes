@@ -176,6 +176,7 @@ public class AdminApiController {
             notify == null ? null : notify.enabled(),
             notify == null ? null : notify.channel(),
             notify == null ? null : notify.webhookUrl(),
+            notify == null ? null : notify.barkUrl(),
             notify == null ? null : notify.orderNowEnabled(),
             notify == null ? null : notify.orderReservationEnabled()
         ));
@@ -220,6 +221,7 @@ public class AdminApiController {
         Boolean enabled,
         String channel,
         String webhookUrl,
+        String barkUrl,
         Boolean orderNowEnabled,
         Boolean orderReservationEnabled
     ) {}

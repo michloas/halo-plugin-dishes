@@ -27,6 +27,7 @@ type SettingsResp = {
     enabled: boolean
     channel: string
     webhookUrl: string
+    barkUrl: string
     orderNowEnabled: boolean
     orderReservationEnabled: boolean
   }
@@ -59,6 +60,7 @@ const form = reactive<SettingsResp>({
     enabled: false,
     channel: '',
     webhookUrl: '',
+    barkUrl: '',
     orderNowEnabled: true,
     orderReservationEnabled: false,
   },
@@ -131,6 +133,7 @@ async function load() {
     form.notify.enabled = !!data.notify?.enabled
     form.notify.channel = data.notify?.channel ?? ''
     form.notify.webhookUrl = data.notify?.webhookUrl ?? ''
+    form.notify.barkUrl = data.notify?.barkUrl ?? ''
     form.notify.orderNowEnabled = data.notify?.orderNowEnabled ?? true
     form.notify.orderReservationEnabled = data.notify?.orderReservationEnabled ?? false
   } catch (e) {
@@ -167,6 +170,7 @@ async function save() {
         enabled: form.notify.enabled,
         channel: form.notify.channel,
         webhookUrl: form.notify.webhookUrl,
+        barkUrl: form.notify.barkUrl,
         orderNowEnabled: form.notify.orderNowEnabled,
         orderReservationEnabled: form.notify.orderReservationEnabled,
       },
@@ -429,6 +433,15 @@ onMounted(() => {
                 type="text"
                 class="settings-input"
                 placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=..."
+              />
+            </div>
+            <div class="settings-field">
+              <div class="settings-field-label">bark消息推送地址</div>
+              <input
+                      v-model="form.notify.barkUrl"
+                      type="text"
+                      class="settings-input"
+                      placeholder="https://xxx.bark.com/xxxxxxxxxxx"
               />
             </div>
             <label class="settings-checkbox">

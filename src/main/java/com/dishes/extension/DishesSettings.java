@@ -59,6 +59,9 @@ public class DishesSettings extends AbstractExtension {
         @Schema(description = "企业微信群机器人 Webhook 地址")
         private String notifyWebhookUrl;
 
+        @Schema(description = "bark消息通知地址")
+        private String notifyBarkUrl;
+
         @Schema(description = "是否开启立即点菜通知")
         private Boolean notifyOrderNowEnabled;
 
