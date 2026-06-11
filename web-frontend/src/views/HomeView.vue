@@ -606,7 +606,7 @@ onUnmounted(() => {
         />
 
         <div class="min-w-0 flex-1">
-          
+
           <h1 class="text-[15px] font-semibold leading-tight tracking-tight text-slate-900">
             {{ publicBrandTitle }}
           </h1>
@@ -919,7 +919,7 @@ onUnmounted(() => {
                   <p v-else class="home-muted py-8 text-center text-sm">
                     暂无推荐数据
                   </p>
-                  
+
                 </template>
                 <template v-else>
                   <div
@@ -930,7 +930,7 @@ onUnmounted(() => {
                         v-if="recList.length"
                         name="home-rec-cards"
                         tag="ul"
-                        class="grid grid-cols-1 gap-2 sm:grid-cols-2"
+                        class="grid grid-cols-1 gap-2"
                         role="list"
                       >
                         <li
@@ -1069,7 +1069,7 @@ onUnmounted(() => {
               <p class="text-sm text-slate-600">
                 暂无预约
               </p>
-             
+
               <button
                 type="button"
                 class="home-btn home-btn--ghost mt-2"
@@ -1176,7 +1176,7 @@ onUnmounted(() => {
           </div>
         </section>
 
-        
+
       </template>
     </div>
 
