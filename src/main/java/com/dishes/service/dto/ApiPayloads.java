@@ -68,6 +68,9 @@ public final class ApiPayloads {
                 "enabled", spec.getNotifyEnabled() != null && spec.getNotifyEnabled(),
                 "channel", spec.getNotifyChannel() == null ? "" : spec.getNotifyChannel(),
                 "webhookUrl", spec.getNotifyWebhookUrl() == null ? "" : spec.getNotifyWebhookUrl(),
+                "barkUrl", spec.getNotifyBarkUrl() == null ? "" : spec.getNotifyBarkUrl(),
+                "barkGroup", spec.getNotifyBarkGroup() == null ? "" : spec.getNotifyBarkGroup(),
+                "barkIconUrl", spec.getNotifyBarkIconUrl() == null ? "" : spec.getNotifyBarkIconUrl(),
                 "orderNowEnabled", spec.getNotifyOrderNowEnabled() == null || spec.getNotifyOrderNowEnabled(),
                 "orderReservationEnabled", spec.getNotifyOrderReservationEnabled() != null && spec.getNotifyOrderReservationEnabled()
             )

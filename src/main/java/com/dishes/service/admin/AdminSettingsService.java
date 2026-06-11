@@ -36,6 +36,8 @@ public class AdminSettingsService {
         String notifyChannel,
         String notifyWebhookUrl,
         String notifyBarkUrl,
+        String notifyBarkGroup,
+        String notifyBarkIconUrl,
         Boolean notifyOrderNowEnabled,
         Boolean notifyOrderReservationEnabled
     ) {
@@ -60,12 +62,15 @@ public class AdminSettingsService {
             spec.setPublicDomainWhitelist(settingsService.normalizeDomainWhitelist(publicDomainWhitelist));
             syncSiteRouterCache(spec);
         }
-        if (notifyEnabled != null || notifyChannel != null || notifyWebhookUrl != null || notifyBarkUrl != null
+        if (notifyEnabled != null || notifyChannel != null || notifyWebhookUrl != null
+            || notifyBarkUrl != null || notifyBarkGroup != null || notifyBarkIconUrl != null
             || notifyOrderNowEnabled != null || notifyOrderReservationEnabled != null) {
             spec.setNotifyEnabled(Boolean.TRUE.equals(notifyEnabled));
             spec.setNotifyChannel(notifyChannel == null ? "" : notifyChannel.trim());
             spec.setNotifyWebhookUrl(notifyWebhookUrl == null ? "" : notifyWebhookUrl.trim());
             spec.setNotifyBarkUrl(notifyBarkUrl == null ? "" : notifyBarkUrl.trim());
+            spec.setNotifyBarkGroup(notifyBarkGroup == null ? "" : notifyBarkGroup.trim());
+            spec.setNotifyBarkIconUrl(notifyBarkIconUrl == null ? "" : notifyBarkIconUrl.trim());
             spec.setNotifyOrderNowEnabled(notifyOrderNowEnabled == null || notifyOrderNowEnabled);
             spec.setNotifyOrderReservationEnabled(Boolean.TRUE.equals(notifyOrderReservationEnabled));
         }

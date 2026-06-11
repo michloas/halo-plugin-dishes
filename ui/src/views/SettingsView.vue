@@ -28,6 +28,8 @@ type SettingsResp = {
     channel: string
     webhookUrl: string
     barkUrl: string
+    barkGroup: string
+    barkIconUrl: string
     orderNowEnabled: boolean
     orderReservationEnabled: boolean
   }
@@ -37,6 +39,7 @@ const loading = ref(true)
 const saving = ref(false)
 const activeTab = ref<'basic' | 'security' | 'notify' | 'backup'>('basic')
 const logoAttachmentModalOpen = ref(false)
+const barkIconAttachmentModalOpen = ref(false)
 
 const backupIncludeOrders = ref(false)
 const backupExporting = ref(false)
@@ -61,6 +64,8 @@ const form = reactive<SettingsResp>({
     channel: '',
     webhookUrl: '',
     barkUrl: '',
+    barkGroup: '',
+    barkIconUrl: '',
     orderNowEnabled: true,
     orderReservationEnabled: false,
   },
@@ -74,6 +79,12 @@ const accessModeOptions: Array<{ value: AccessMode; label: string; desc: string 
 const needPasswordInput = computed(() => form.basic.accessMode === 'password')
 const logoPreviewUrl = computed(() => {
   const raw = (form.basic.publicLogoUrl || '').trim()
+  if (!raw) return ''
+  return utils.attachment.getThumbnailUrl(raw, 'M')
+})
+
+const barkIconPreviewUrl = computed(() => {
+  const raw = (form.notify.barkIconUrl || '').trim()
   if (!raw) return ''
   return utils.attachment.getThumbnailUrl(raw, 'M')
 })
@@ -116,6 +127,32 @@ function onLogoAttachmentSelect(attachments: AttachmentLike[]) {
   Dialog.warning({ title: '选择失败', description: '未从附件中解析到可用图片地址，请换一个附件重试。' })
 }
 
+function onBarkIconAttachmentSelect(attachments: AttachmentLike[]) {
+  const first = attachments?.[0]
+  const status = first?.status ?? {}
+  const spec = first?.spec ?? {}
+  const url =
+          asString(status.permalink) ||
+          asString(status.url) ||
+          asString(status.link) ||
+          asString(status.publicUrl) ||
+          asString(status.downloadUrl) ||
+          asString(spec.permalink) ||
+          asString(spec.url) ||
+          asString(spec.link) ||
+          asString(spec.path) ||
+          asString(first?.permalink) ||
+          asString(first?.url) ||
+          asString(first?.path) ||
+          ''
+
+  if (url.trim()) {
+    form.notify.barkIconUrl = url.trim()
+    return
+  }
+  Dialog.warning({ title: '选择失败', description: '未从附件中解析到可用图片地址，请换一个附件重试。' })
+}
+
 async function load() {
   loading.value = true
   try {
@@ -134,6 +171,8 @@ async function load() {
     form.notify.channel = data.notify?.channel ?? ''
     form.notify.webhookUrl = data.notify?.webhookUrl ?? ''
     form.notify.barkUrl = data.notify?.barkUrl ?? ''
+    form.notify.barkGroup = data.notify?.barkGroup ?? ''
+    form.notify.barkIconUrl = data.notify?.barkIconUrl ?? ''
     form.notify.orderNowEnabled = data.notify?.orderNowEnabled ?? true
     form.notify.orderReservationEnabled = data.notify?.orderReservationEnabled ?? false
   } catch (e) {
@@ -171,6 +210,8 @@ async function save() {
         channel: form.notify.channel,
         webhookUrl: form.notify.webhookUrl,
         barkUrl: form.notify.barkUrl,
+        barkGroup: form.notify.barkGroup,
+        barkIconUrl: form.notify.barkIconUrl,
         orderNowEnabled: form.notify.orderNowEnabled,
         orderReservationEnabled: form.notify.orderReservationEnabled,
       },
@@ -264,6 +305,13 @@ onMounted(() => {
       :max="1"
       :accepts="['image/*']"
       @select="onLogoAttachmentSelect"
+    />
+
+    <AttachmentSelectorModal
+            v-model:visible="barkIconAttachmentModalOpen"
+            :max="1"
+            :accepts="['image/*']"
+            @select="onBarkIconAttachmentSelect"
     />
 
     <VCard class="settings-card" :body-class="[':uno: !p-0']">
@@ -443,6 +491,30 @@ onMounted(() => {
                       class="settings-input"
                       placeholder="https://xxx.bark.com/xxxxxxxxxxx"
               />
+            </div>
+            <div class="settings-field">
+              <div class="settings-field-label">bark消息通知分组</div>
+              <input
+                      v-model="form.notify.barkGroup"
+                      type="text"
+                      class="settings-input"
+              />
+            </div>
+            <div class="settings-field">
+              <div class="settings-field-label">bark消息通知图标</div>
+              <div class="settings-logo-row">
+                <div class="settings-logo-preview-wrap">
+                  <img v-if="barkIconPreviewUrl" :src="barkIconPreviewUrl" alt="logo" class="settings-logo-preview" />
+                  <span v-else class="settings-logo-placeholder">未设置</span>
+                </div>
+                <div class="settings-logo-actions">
+                  <VButton size="sm" @click="barkIconAttachmentModalOpen = true">从附件库选择</VButton>
+                  <VButton size="sm" type="secondary" :disabled="!form.notify.barkIconUrl" @click="form.notify.barkIconUrl = ''">
+                    清空
+                  </VButton>
+                </div>
+              </div>
+              <p class="settings-hint">未设置时前台将继续使用默认图标。</p>
             </div>
             <label class="settings-checkbox">
               <input v-model="form.notify.orderNowEnabled" type="checkbox" :disabled="!form.notify.enabled" />

@@ -10,7 +10,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -177,6 +186,8 @@ public class AdminApiController {
             notify == null ? null : notify.channel(),
             notify == null ? null : notify.webhookUrl(),
             notify == null ? null : notify.barkUrl(),
+            notify == null ? null : notify.barkGroup(),
+            notify == null ? null : notify.barkIconUrl(),
             notify == null ? null : notify.orderNowEnabled(),
             notify == null ? null : notify.orderReservationEnabled()
         ));
@@ -222,6 +233,8 @@ public class AdminApiController {
         String channel,
         String webhookUrl,
         String barkUrl,
+        String barkGroup,
+        String barkIconUrl,
         Boolean orderNowEnabled,
         Boolean orderReservationEnabled
     ) {}

@@ -46,30 +46,58 @@ public class OrderNotifyService {
         if (!isReservation && !nowEnabled) return;
         if (isReservation && !reservationEnabled) return;
         var webhookUrl = selectWebhookUrl(settings);
-        if (webhookUrl.isBlank()) return;
+        if (!webhookUrl.isBlank()){
+            var periodName = periodName(mealPeriodCode);
+            var itemCount = items == null ? 0 : items.size();
+            var title = buildNotifyTitle(isReservation, orderDate, periodName);
+            var description = "%s共%s道菜，点击查看菜品详情".formatted(periodName.isBlank() ? "本次" : periodName, itemCount);
+            var pageUrl = resolvePublicPageUrl(settings, request);
+            var picUrl = resolveLogoUrl(settings, request);
 
-        var periodName = periodName(mealPeriodCode);
-        var itemCount = items == null ? 0 : items.size();
-        var title = buildNotifyTitle(isReservation, orderDate, periodName);
-        var description = "%s共%s道菜，点击查看菜品详情".formatted(periodName.isBlank() ? "本次" : periodName, itemCount);
-        var pageUrl = resolvePublicPageUrl(settings, request);
-        var picUrl = resolveLogoUrl(settings, request);
-
-        var payload = Map.of(
-            "msgtype", "news",
-            "news", Map.of(
-                "articles", List.of(Map.of("title", title, "description", description, "url", pageUrl, "picurl", picUrl))
-            )
-        );
-        try {
-            var req = HttpRequest.newBuilder(URI.create(webhookUrl))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(payload), StandardCharsets.UTF_8))
-                .build();
-            HttpClient.newHttpClient().sendAsync(req, HttpResponse.BodyHandlers.ofString()).exceptionally(ex -> null);
-        } catch (Exception ex) {
-            log.warn("Failed to push notify message, webhook={}", webhookUrl, ex);
+            var payload = Map.of(
+                "msgtype", "news",
+                "news", Map.of(
+                    "articles", List.of(Map.of("title", title, "description", description, "url", pageUrl, "picurl", picUrl))
+                )
+            );
+            try {
+                var req = HttpRequest.newBuilder(URI.create(webhookUrl))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(payload), StandardCharsets.UTF_8))
+                    .build();
+                HttpClient.newHttpClient().sendAsync(req, HttpResponse.BodyHandlers.ofString()).exceptionally(ex -> null);
+            } catch (Exception ex) {
+                log.warn("Failed to push notify message, webhook={}", webhookUrl, ex);
+            }
         }
+        var barkUrl = selectBarkUrl(settings);
+        if (!barkUrl.isBlank()){
+            var periodName = periodName(mealPeriodCode);
+            var itemCount = items == null ? 0 : items.size();
+            var title = buildNotifyTitle(isReservation, orderDate, periodName);
+            var description = "%s共%s道菜，点击查看菜品详情".formatted(periodName.isBlank() ? "本次" : periodName, itemCount);
+            var pageUrl = resolvePublicPageUrl(settings, request);
+            var iconUrl = resolveIconUrl(settings, request);
+            var groupName = settings.getNotifyBarkGroup();
+
+            var payload = Map.of(
+                "title", title,
+                "body", description,
+                "url", pageUrl,
+                "icon", iconUrl,
+                "group",groupName
+            );
+            try {
+                var req = HttpRequest.newBuilder(URI.create(barkUrl))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(payload), StandardCharsets.UTF_8))
+                    .build();
+                HttpClient.newHttpClient().sendAsync(req, HttpResponse.BodyHandlers.ofString()).exceptionally(ex -> null);
+            } catch (Exception ex) {
+                log.warn("Failed to push notify message, webhook={}", webhookUrl, ex);
+            }
+        }
+
     }
 
     private boolean isReservationOrder(LocalDate orderDate) {
@@ -80,6 +108,14 @@ public class OrderNotifyService {
         var period = periodName == null || periodName.isBlank() ? "用餐" : periodName;
         if (isReservation) return "%s 预约%s".formatted(orderDate.format(MONTH_DAY_FMT), period);
         return "今日%s已点".formatted(period);
+    }
+
+    private String selectBarkUrl(DishesSettings.Spec settings) {
+        var url = settings.getNotifyBarkUrl() == null ? "" : settings.getNotifyBarkUrl().trim();
+        if (!url.isBlank()) return url;
+        var channel = settings.getNotifyChannel() == null ? "" : settings.getNotifyChannel().trim();
+        if (channel.startsWith("http://") || channel.startsWith("https://")) return channel;
+        return "";
     }
 
     private String selectWebhookUrl(DishesSettings.Spec settings) {
@@ -105,6 +141,15 @@ public class OrderNotifyService {
     private String resolveLogoUrl(DishesSettings.Spec settings, ServerHttpRequest request) {
         var origin = request.getURI().getScheme() + "://" + request.getURI().getAuthority();
         var configured = settings == null ? "" : settingsService.normalizeLogoUrl(settings.getPublicLogoUrl());
+        if (!configured.isBlank()) {
+            return toAbsoluteUrl(origin, request.getURI().getScheme(), configured);
+        }
+        return origin + "/plugins/dishes/static/dishes-frontend/assets/logo.png";
+    }
+
+    private String resolveIconUrl(DishesSettings.Spec settings, ServerHttpRequest request) {
+        var origin = request.getURI().getScheme() + "://" + request.getURI().getAuthority();
+        var configured = settings == null ? "" : settingsService.normalizeLogoUrl(settings.getNotifyBarkIconUrl());
         if (!configured.isBlank()) {
             return toAbsoluteUrl(origin, request.getURI().getScheme(), configured);
         }

@@ -119,6 +119,8 @@ public class AdminFacadeService {
         String notifyChannel,
         String notifyWebhookUrl,
         String notifyBarkUrl,
+        String notifyBarkGroup,
+        String notifyBarkIconUrl,
         Boolean notifyOrderNowEnabled,
         Boolean notifyOrderReservationEnabled
     ) {
@@ -135,6 +137,8 @@ public class AdminFacadeService {
             notifyChannel,
             notifyWebhookUrl,
             notifyBarkUrl,
+            notifyBarkGroup,
+            notifyBarkIconUrl,
             notifyOrderNowEnabled,
             notifyOrderReservationEnabled
         );

@@ -62,6 +62,12 @@ public class DishesSettings extends AbstractExtension {
         @Schema(description = "bark消息通知地址")
         private String notifyBarkUrl;
 
+        @Schema(description = "bark消息通知分组")
+        private String notifyBarkGroup;
+
+        @Schema(description = "bark消息通知图标")
+        private String notifyBarkIconUrl;
+
         @Schema(description = "是否开启立即点菜通知")
         private Boolean notifyOrderNowEnabled;
 
