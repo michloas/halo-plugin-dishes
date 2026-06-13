@@ -725,6 +725,7 @@ watch(
                     <th class=":uno: px-3 py-2 text-left">推荐星级</th>
                     <th class=":uno: px-3 py-2 text-left">适用餐段</th>
                     <th class=":uno: px-3 py-2 text-left">上架/下架</th>
+                    <th class=":uno: px-3 py-2 text-left">描述</th>
                     <th class=":uno: px-3 py-2 text-left">操作</th>
                   </tr>
                 </thead>
@@ -763,6 +764,7 @@ watch(
                         @update:model-value="(value:boolean) => updateDishAvailability(d, value)"
                       />
                     </td>
+                    <td class=":uno: px-3 py-3 text-gray-600">{{ d.description }}</td>
                     <td class=":uno: px-3 py-3">
                       <VSpace class=":uno: gap-2">
                         <VButton size="xs" type="secondary" class="op-btn" @click="openEditDish(d)">编辑</VButton>
