@@ -3,6 +3,7 @@ import { markRaw } from 'vue'
 import RiFileList3Line from '~icons/ri/file-list-3-line'
 import RiRestaurant2Line from '~icons/ri/restaurant-2-line'
 import RiSettings3Line from '~icons/ri/settings-3-line'
+import RiBarChartBoxLine from '~icons/ri/bar-chart-box-line'
 
 export default definePlugin({
   components: {},
@@ -54,6 +55,20 @@ export default definePlugin({
             },
           },
           {
+            path: 'statistics',
+            name: 'DishesStatistics',
+            component: () => import(/* webpackChunkName: "StatisticsView" */ './views/StatisticsView.vue'),
+            meta: {
+              title: '点餐统计',
+              searchable: true,
+              menu: {
+                name: '点餐统计',
+                icon: markRaw(RiBarChartBoxLine),
+                priority: 3,
+              },
+            },
+          },
+          {
             path: 'settings',
             name: 'DishesSettings',
             component: () => import(/* webpackChunkName: "SettingsView" */ './views/SettingsView.vue'),
@@ -63,7 +78,7 @@ export default definePlugin({
               menu: {
                 name: '插件设置',
                 icon: markRaw(RiSettings3Line),
-                priority: 3,
+                priority: 4,
               },
             },
           },

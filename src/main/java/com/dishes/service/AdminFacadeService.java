@@ -102,6 +102,14 @@ public class AdminFacadeService {
         return adminOrderService.getOrder(id);
     }
 
+    public Map<String, Object> getDishStatistics(String from, String to, int topN) {
+        return adminOrderService.getDishStatistics(from, to, topN);
+    }
+
+    public Map<String, Object> getOrderStatistics(String from, String to) {
+        return adminOrderService.getOrderStatistics(from, to);
+    }
+
     public Map<String, Object> getSettings() {
         return adminSettingsService.getSettings();
     }

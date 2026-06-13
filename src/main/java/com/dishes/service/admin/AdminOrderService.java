@@ -38,4 +38,27 @@ public class AdminOrderService {
         if (o == null) throw new BusinessException(BusinessErrorCode.NOT_FOUND, "notfound");
         return ApiPayloads.orderDetail(o, store.orderToApi(o));
     }
+
+    public Map<String, Object> getDishStatistics(String from, String to, int topN) {
+        var toDate = (to == null || to.isBlank()) ? LocalDate.now() : LocalDate.parse(to);
+        var fromDate = (from == null || from.isBlank()) ? LocalDate.of(toDate.getYear(), toDate.getMonth(), 1) : LocalDate.parse(from);
+        if (fromDate.isAfter(toDate)) {
+            var temp = fromDate;
+            fromDate = toDate;
+            toDate = temp;
+        }
+        var normalizedTopN = (topN <= 0) ? 20 : Math.min(topN, 100);
+        return store.getDishStatistics(fromDate, toDate, normalizedTopN);
+    }
+
+    public Map<String, Object> getOrderStatistics(String from, String to) {
+        var toDate = (to == null || to.isBlank()) ? LocalDate.now() : LocalDate.parse(to);
+        var fromDate = (from == null || from.isBlank()) ? LocalDate.of(toDate.getYear(), toDate.getMonth(), 1) : LocalDate.parse(from);
+        if (fromDate.isAfter(toDate)) {
+            var temp = fromDate;
+            fromDate = toDate;
+            toDate = temp;
+        }
+        return store.getOrderStatistics(fromDate, toDate);
+    }
 }

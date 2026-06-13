@@ -164,6 +164,23 @@ public class AdminApiController {
         return Envelope.ok(adminFacadeService.getOrder(id));
     }
 
+    @GetMapping("/statistics/dishes")
+    public Envelope<Map<String, Object>> getDishStatistics(
+        @RequestParam(name = "from", required = false) String from,
+        @RequestParam(name = "to", required = false) String to,
+        @RequestParam(name = "top", defaultValue = "20") int topN
+    ) {
+        return Envelope.ok(adminFacadeService.getDishStatistics(from, to, topN));
+    }
+
+    @GetMapping("/statistics/orders")
+    public Envelope<Map<String, Object>> getOrderStatistics(
+        @RequestParam(name = "from", required = false) String from,
+        @RequestParam(name = "to", required = false) String to
+    ) {
+        return Envelope.ok(adminFacadeService.getOrderStatistics(from, to));
+    }
+
     @GetMapping("/settings")
     public Envelope<Map<String, Object>> getSettings() {
         return Envelope.ok(adminFacadeService.getSettings());

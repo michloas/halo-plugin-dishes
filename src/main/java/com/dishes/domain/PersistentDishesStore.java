@@ -311,4 +311,235 @@ public class PersistentDishesStore implements DishesStore {
         var ext = finder.getMealOrderExt(String.valueOf(id));
         return ext == null ? null : toOrder(ext);
     }
+
+    @Override
+    public Map<String, Object> getDishStatistics(LocalDate from, LocalDate to, int topN) {
+       var dishById = new HashMap<Long, DishesStore.Dish>();
+        for (var d : listDishes(null)) {
+            dishById.put(d.id(), d);
+        }
+        
+        // 总体统计
+        var overallMap = new LinkedHashMap<Long, DishStat>();
+        // 早餐统计
+        var breakfastMap = new LinkedHashMap<Long, DishStat>();
+        // 午餐统计
+        var lunchMap = new LinkedHashMap<Long, DishStat>();
+        // 晚餐统计
+        var dinnerMap = new LinkedHashMap<Long, DishStat>();
+        
+        for (var ext : finder.listMealOrders()) {
+            var d = LocalDate.parse(ext.getSpec().getOrderDate());
+            if (d.isBefore(from) || d.isAfter(to)) continue;
+            
+            if (ext.getSpec().getItems() == null) continue;
+            
+            var periodCode = ext.getSpec().getMealPeriodCode();
+            
+            for (var item : ext.getSpec().getItems()) {
+                var dishId = item.getDishId();
+                var quantity = item.getQuantity() == null ? 1.0 : item.getQuantity();
+                
+                var dish = dishById.get(dishId);
+                if (dish == null) continue;
+                
+                var stat = new DishStat(
+                    dish.id(),
+                    dish.name(),
+                    dish.categoryName(),
+                    dish.imageUrl(),
+                    1,
+                    quantity
+                );
+                
+                // 添加到总体统计
+                addToStatMap(overallMap, dishId, stat);
+                
+                // 根据餐段添加到对应统计
+                if ("breakfast".equalsIgnoreCase(periodCode)) {
+                    addToStatMap(breakfastMap, dishId, stat);
+                } else if ("lunch".equalsIgnoreCase(periodCode)) {
+                    addToStatMap(lunchMap, dishId, stat);
+                } else if ("dinner".equalsIgnoreCase(periodCode)) {
+                    addToStatMap(dinnerMap, dishId, stat);
+                }
+            }
+        }
+        
+        return Map.of(
+            "overall", buildStatList(overallMap, topN),
+            "breakfast", buildStatList(breakfastMap, topN),
+            "lunch", buildStatList(lunchMap, topN),
+            "dinner", buildStatList(dinnerMap, topN),
+            "from", from.toString(),
+            "to", to.toString()
+        );
+    }
+    
+    private void addToStatMap(LinkedHashMap<Long, DishStat> map, long dishId, DishStat newStat) {
+        var existing = map.get(dishId);
+        if (existing == null) {
+            map.put(dishId, newStat);
+        } else {
+            map.put(dishId, new DishStat(
+                existing.dishId(),
+                existing.dishName(),
+                existing.categoryName(),
+                existing.imageUrl(),
+                existing.orderCount() + 1,
+                existing.totalQuantity() + newStat.totalQuantity()
+            ));
+        }
+    }
+    
+    private List<Map<String, Object>> buildStatList(LinkedHashMap<Long, DishStat> map, int topN) {
+        var stats = map.values().stream()
+            .sorted((a, b) -> {
+                var cmp = Integer.compare(b.orderCount(), a.orderCount());
+                if (cmp != 0) return cmp;
+                return Double.compare(b.totalQuantity(), a.totalQuantity());
+            })
+            .limit(topN)
+            .toList();
+        
+        var items = new ArrayList<Map<String, Object>>();
+        for (var stat : stats) {
+            var item = new LinkedHashMap<String, Object>();
+            item.put("dishId", stat.dishId());
+            item.put("dishName", stat.dishName());
+            item.put("categoryName", stat.categoryName());
+            item.put("imageUrl", stat.imageUrl());
+            item.put("orderCount", stat.orderCount());
+            item.put("totalQuantity", stat.totalQuantity());
+            items.add(item);
+        }
+        return items;
+    }
+    
+    private record DishStat(
+        long dishId,
+        String dishName,
+        String categoryName,
+        String imageUrl,
+        int orderCount,
+        double totalQuantity
+    ) {}
+
+    @Override
+    public Map<String, Object> getOrderStatistics(LocalDate from, LocalDate to) {
+        var ordersByDate = new LinkedHashMap<String, Integer>();
+        var ordersByPeriod = new LinkedHashMap<String, Integer>();
+        var categoryStats = new LinkedHashMap<Long, CategoryStat>();
+        var categoryById = new HashMap<Long, String>();
+        
+        int totalOrders = 0;
+        int totalItems = 0;
+        int activeDays = 0;
+        
+        // 获取所有分类名称
+        for (var d : listDishes(null)) {
+            categoryById.put(d.categoryId(), d.categoryName());
+        }
+        
+        // 初始化餐段统计
+        for (var mp : PERIODS) {
+            ordersByPeriod.put(mp.code(), 0);
+        }
+        
+        for (var ext : finder.listMealOrders()) {
+            var d = LocalDate.parse(ext.getSpec().getOrderDate());
+            if (d.isBefore(from) || d.isAfter(to)) continue;
+            
+            var dateStr = d.toString();
+            var periodCode = ext.getSpec().getMealPeriodCode();
+            var itemCount = ext.getSpec().getItems() == null ? 0 : ext.getSpec().getItems().size();
+            
+            totalOrders++;
+            totalItems += itemCount;
+            
+            // 按日期统计
+            ordersByDate.merge(dateStr, 1, Integer::sum);
+            
+            // 按餐段统计
+            ordersByPeriod.merge(periodCode, 1, Integer::sum);
+            
+            // 按分类统计
+            if (ext.getSpec().getItems() != null) {
+                var allDishes = listDishes(null);
+                for (var item : ext.getSpec().getItems()) {
+                    var targetDish = allDishes.stream()
+                        .filter(dishItem -> dishItem.id() == item.getDishId())
+                        .findFirst()
+                        .orElse(null);
+                    
+                    if (targetDish != null) {
+                        var catId = targetDish.categoryId();
+                        categoryStats.computeIfAbsent(catId, id -> 
+                            new CategoryStat(id, categoryById.getOrDefault(id, "未知"), 0)
+                        );
+                        var stat = categoryStats.get(catId);
+                        categoryStats.put(catId, new CategoryStat(
+                            stat.categoryId(),
+                            stat.categoryName(),
+                            stat.count() + 1
+                        ));
+                    }
+                }
+            }
+        }
+        
+        // 计算活跃天数
+        activeDays = ordersByDate.size();
+        
+        // 构建日期趋势数据
+        var dateTrend = new ArrayList<Map<String, Object>>();
+        for (var entry : ordersByDate.entrySet()) {
+            var item = new LinkedHashMap<String, Object>();
+            item.put("date", entry.getKey());
+            item.put("count", entry.getValue());
+            dateTrend.add(item);
+        }
+        
+        // 构建餐段分布数据
+        var periodDistribution = new ArrayList<Map<String, Object>>();
+        for (var entry : ordersByPeriod.entrySet()) {
+            var mp = resolveMealPeriodByCode(entry.getKey());
+            var item = new LinkedHashMap<String, Object>();
+            item.put("code", entry.getKey());
+            item.put("name", mp != null ? mp.name() : entry.getKey());
+            item.put("count", entry.getValue());
+            periodDistribution.add(item);
+        }
+        
+        // 构建分类统计（按数量排序）
+        var categoryList = categoryStats.values().stream()
+            .sorted((a, b) -> Integer.compare(b.count(), a.count()))
+            .map(stat -> {
+                var item = new LinkedHashMap<String, Object>();
+                item.put("categoryId", stat.categoryId());
+                item.put("categoryName", stat.categoryName());
+                item.put("count", stat.count());
+                return item;
+            })
+            .toList();
+        
+        // 计算平均值
+        var avgItemsPerOrder = totalOrders > 0 ? (double) totalItems / totalOrders : 0;
+        
+        return Map.of(
+            "summary", Map.of(
+                "totalOrders", totalOrders,
+                "totalItems", totalItems,
+                "activeDays", activeDays,
+                "avgItemsPerOrder", Math.round(avgItemsPerOrder * 100.0) / 100.0
+            ),
+            "dateTrend", dateTrend,
+            "periodDistribution", periodDistribution,
+            "categoryStats", categoryList,
+            "from", from.toString(),
+            "to", to.toString()
+        );
+    }
+    
+    private record CategoryStat(long categoryId, String categoryName, int count) {}
 }

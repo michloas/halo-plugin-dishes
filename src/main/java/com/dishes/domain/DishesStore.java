@@ -63,6 +63,10 @@ public interface DishesStore {
 
     Map<String, Object> listOrdersSummary(LocalDate from, LocalDate to, int limit, int offset, String periodCode);
     Order findOrderById(long id);
+
+    Map<String, Object> getDishStatistics(LocalDate from, LocalDate to, int topN);
+    
+    Map<String, Object> getOrderStatistics(LocalDate from, LocalDate to);
 }
 
 

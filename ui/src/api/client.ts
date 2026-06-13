@@ -121,3 +121,83 @@ export async function importBackupZip(file: File): Promise<{
   return res.data.data
 }
 
+export async function getDishStatistics(params: {
+  from?: string
+  to?: string
+  top?: number
+}): Promise<{
+  overall: Array<{
+    dishId: number
+    dishName: string
+    categoryName: string
+    imageUrl?: string | null
+    orderCount: number
+    totalQuantity: number
+  }>
+  breakfast: Array<{
+    dishId: number
+    dishName: string
+    categoryName: string
+    imageUrl?: string | null
+    orderCount: number
+    totalQuantity: number
+  }>
+  lunch: Array<{
+    dishId: number
+    dishName: string
+    categoryName: string
+    imageUrl?: string | null
+    orderCount: number
+    totalQuantity: number
+  }>
+  dinner: Array<{
+    dishId: number
+    dishName: string
+    categoryName: string
+    imageUrl?: string | null
+    orderCount: number
+    totalQuantity: number
+  }>
+  from: string
+  to: string
+}> {
+  const qs = new URLSearchParams()
+  if (params.from) qs.set('from', params.from)
+  if (params.to) qs.set('to', params.to)
+  if (params.top) qs.set('top', String(params.top))
+  return getData(`/statistics/dishes?${qs.toString()}`)
+}
+
+export async function getOrderStatistics(params: {
+  from?: string
+  to?: string
+}): Promise<{
+  summary: {
+    totalOrders: number
+    totalItems: number
+    activeDays: number
+    avgItemsPerOrder: number
+  }
+  dateTrend: Array<{
+    date: string
+    count: number
+  }>
+  periodDistribution: Array<{
+    code: string
+    name: string
+    count: number
+  }>
+  categoryStats: Array<{
+    categoryId: number
+    categoryName: string
+    count: number
+  }>
+  from: string
+  to: string
+}> {
+  const qs = new URLSearchParams()
+  if (params.from) qs.set('from', params.from)
+  if (params.to) qs.set('to', params.to)
+  return getData(`/statistics/orders?${qs.toString()}`)
+}
+
